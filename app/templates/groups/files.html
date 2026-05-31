@@ -1,0 +1,64 @@
+{% extends "base/layout.html" %}
+{% block title %}Files — {{ group.name }}{% endblock %}
+{% block breadcrumb %}
+<div class="ma-breadcrumb"><a href="{{ url_for('main.index') }}">Groups</a> <span>»</span> <a href="{{ url_for('groups.view', slug=group.slug) }}">{{ group.name }}</a> <span>»</span> <strong>Files</strong></div>
+{% endblock %}
+{% block content %}
+<div style="max-width:700px;">
+
+  {% if member and member.role != 'pending' %}
+  <div class="ma-card" style="margin-bottom:16px;">
+    <div class="ma-card-header"><i class="bi bi-upload" style="color:var(--accent);"></i> Upload File</div>
+    <div class="ma-card-body" style="padding:16px;">
+      <form method="post" action="{{ url_for('groups.upload_file', slug=group.slug) }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="flex:1;min-width:200px;">
+            <label class="ma-label">File</label>
+            <input type="file" name="file" class="ma-input" required>
+          </div>
+          <div style="flex:2;min-width:200px;">
+            <label class="ma-label">Description (optional)</label>
+            <input type="text" name="description" class="ma-input" maxlength="500" placeholder="What is this file?">
+          </div>
+          <button type="submit" class="ma-btn ma-btn-primary"><i class="bi bi-upload"></i> Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="ma-card">
+    <div class="ma-card-header"><i class="bi bi-folder-fill" style="color:var(--accent);"></i> Files <span style="color:var(--text-muted);font-weight:normal;">{{ files|length }}</span></div>
+    {% if files %}
+    <div>
+      {% for f in files %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .15s;"
+           onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <i class="bi bi-file-earmark" style="font-size:18px;color:var(--text-muted);flex-shrink:0;"></i>
+          <div style="min-width:0;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.filename }}</div>
+            {% if f.description %}<div style="font-size:11px;color:var(--text-muted);">{{ f.description }}</div>{% endif %}
+            <div style="font-size:11px;color:var(--text-muted);">
+              {{ f.uploader.display }} · {{ f.created_at.strftime('%b %d, %Y') }}
+              · {{ (f.file_size / 1024) | int }}KB
+            </div>
+          </div>
+        </div>
+        <a href="{{ url_for('groups.download_file', slug=group.slug, file_id=f.id) }}"
+           class="ma-btn ma-btn-ghost ma-btn-sm" style="flex-shrink:0;">
+          <i class="bi bi-download"></i> Download
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="ma-card-body" style="text-align:center;padding:40px;color:var(--text-muted);">
+      <i class="bi bi-folder" style="font-size:32px;display:block;margin-bottom:10px;"></i>
+      No files uploaded yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

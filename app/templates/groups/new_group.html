@@ -1,0 +1,45 @@
+{% extends "base/layout.html" %}
+{% block title %}New Group{% endblock %}
+{% block breadcrumb %}
+<div class="ma-breadcrumb"><a href="{{ url_for('main.index') }}">Groups</a> <span>»</span> <strong>New Group</strong></div>
+{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+  <div class="ma-card">
+    <div class="ma-card-header"><i class="bi bi-plus-circle-fill" style="color:var(--accent);"></i> Create a New Group</div>
+    <div class="ma-card-body" style="padding:20px;">
+      {% if error %}<div class="ma-error">{{ error }}</div>{% endif %}
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="ma-form-group">
+          <label class="ma-label">Group Name</label>
+          <input type="text" name="name" class="ma-input" maxlength="100" required autofocus placeholder="My Awesome Group">
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Description</label>
+          <textarea name="description" class="ma-input" rows="3" placeholder="What is this group about?"></textarea>
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Privacy</label>
+          <select name="privacy" class="ma-input">
+            <option value="public">Public — anyone can join and read</option>
+            <option value="private">Private — anyone can find it, but must request to join</option>
+            <option value="invite">Invite Only — hidden, members only</option>
+          </select>
+        </div>
+        <div class="ma-form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-dim);">
+            <input type="checkbox" name="digest_enabled" style="accent-color:var(--accent);">
+            Enable email digests for this group
+          </label>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Members can receive daily or weekly digests of new posts. Requires Mailcow API key.</div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <a href="{{ url_for('main.index') }}" class="ma-btn ma-btn-ghost">Cancel</a>
+          <button type="submit" class="ma-btn ma-btn-primary"><i class="bi bi-check-lg"></i> Create Group</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

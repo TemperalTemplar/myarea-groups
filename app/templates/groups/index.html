@@ -1,0 +1,132 @@
+{% extends "base/layout.html" %}
+{% block title %}Groups{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 260px;gap:20px;">
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h1 style="font-family:var(--font-mono);font-size:20px;font-weight:700;letter-spacing:2px;">MY<span style="color:var(--accent)">AREA</span> GROUPS</h1>
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:1px;margin-top:2px;">COMMUNITY · DISCUSSIONS · FILES · DIGESTS</div>
+      </div>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('groups.new_group') }}" class="ma-btn ma-btn-primary ma-btn-sm">
+        <i class="bi bi-plus-lg"></i> New Group
+      </a>
+      {% endif %}
+    </div>
+
+    {% if current_user.is_authenticated and my_groups %}
+    <div style="margin-bottom:24px;">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">Your Groups</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
+        {% for group in my_groups %}
+        <a href="{{ url_for('groups.view', slug=group.slug) }}"
+           style="display:block;background:var(--bg2);border:1px solid var(--border2);border-top:3px solid var(--accent);border-radius:6px;padding:14px;text-decoration:none;transition:border-color .15s;"
+           onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderTopColor='var(--accent)';this.style.borderColor='var(--border2)';this.style.borderTopColor='var(--accent)'">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">
+            {% if group.icon %}{{ group.icon }} {% endif %}{{ group.name }}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);">{{ group.member_count }} members · {{ group.thread_count }} threads</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">All Groups</div>
+
+    {% if public_groups %}
+    <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg2);">
+      {% for group in public_groups %}
+      <div style="display:grid;grid-template-columns:1fr 80px 80px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);transition:background .15s;"
+           onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            {% if group.icon %}<span style="font-size:16px;">{{ group.icon }}</span>{% endif %}
+            <a href="{{ url_for('groups.view', slug=group.slug) }}"
+               style="font-size:14px;font-weight:700;color:var(--text);"
+               onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text)'">
+              {{ group.name }}
+            </a>
+            {% if group.privacy == 'private' %}
+              <span style="font-size:10px;background:var(--bg3);border:1px solid var(--border2);color:var(--text-muted);padding:1px 5px;border-radius:3px;">PRIVATE</span>
+            {% elif group.privacy == 'invite' %}
+              <span style="font-size:10px;background:rgba(230,57,70,.1);border:1px solid var(--accent);color:var(--accent);padding:1px 5px;border-radius:3px;">INVITE</span>
+            {% endif %}
+            {% if group.digest_enabled %}
+              <span style="font-size:10px;color:var(--text-muted);"><i class="bi bi-envelope"></i></span>
+            {% endif %}
+          </div>
+          {% if group.description %}
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">{{ group.description | truncate(100) }}</div>
+          {% endif %}
+        </div>
+        <div style="text-align:center;font-size:12px;color:var(--text-muted);">
+          <div><strong style="color:var(--text-dim);">{{ group.member_count }}</strong></div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;">members</div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:var(--text-muted);">
+          <div><strong style="color:var(--text-dim);">{{ group.thread_count }}</strong></div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;">threads</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="ma-card">
+      <div class="ma-card-body" style="text-align:center;padding:48px;color:var(--text-muted);">
+        <i class="bi bi-people" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+        <div style="font-size:14px;margin-bottom:8px;">No groups yet.</div>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('groups.new_group') }}" class="ma-btn ma-btn-primary" style="margin-top:12px;">Create the first group</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    {% if current_user.is_authenticated %}
+    <div class="ma-card" style="margin-bottom:16px;">
+      <div class="ma-card-header"><i class="bi bi-person-fill" style="color:var(--accent);"></i> {{ current_user.display }}</div>
+      <div class="ma-card-body" style="padding:12px 16px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Member of {{ my_groups|length }} group{{ 's' if my_groups|length != 1 else '' }}</div>
+        <a href="{{ url_for('groups.new_group') }}" class="ma-btn ma-btn-primary ma-btn-sm" style="width:100%;justify-content:center;">
+          <i class="bi bi-plus-lg"></i> New Group
+        </a>
+      </div>
+    </div>
+    {% else %}
+    <div class="ma-card" style="margin-bottom:16px;">
+      <div class="ma-card-body" style="padding:16px;text-align:center;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Join the community</div>
+        <a href="{{ url_for('auth.login') }}" class="ma-btn ma-btn-ghost ma-btn-sm" style="width:100%;justify-content:center;margin-bottom:6px;">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="ma-btn ma-btn-primary ma-btn-sm" style="width:100%;justify-content:center;">Register</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="ma-card">
+      <div class="ma-card-header"><i class="bi bi-grid-3x3-gap-fill" style="color:var(--accent);"></i> Platform</div>
+      <div class="ma-card-body" style="padding:8px 0;">
+        {% for name, url, icon, color in [
+          ('Social', 'https://myarea.wrds361.com', 'bi-people-fill', '#e63946'),
+          ('Forum', 'https://forum.wrds361.com', 'bi-chat-square-text-fill', '#e63946'),
+          ('Journal', 'https://journal.wrds361.com', 'bi-journal-text', '#f59e0b'),
+          ('Games', 'https://myareagames.wrds361.com', 'bi-controller', '#7c3aed'),
+          ('Chat', 'https://chat.wrds361.com', 'bi-chat-fill', '#06b6d4'),
+        ] %}
+        <a href="{{ url }}" target="_blank"
+           style="display:flex;align-items:center;gap:10px;padding:8px 16px;color:var(--text-dim);font-size:13px;transition:background .15s;"
+           onmouseover="this.style.background='var(--bg3)';this.style.color='var(--text)'"
+           onmouseout="this.style.background='transparent';this.style.color='var(--text-dim)'">
+          <i class="bi {{ icon }}" style="color:{{ color }};font-size:14px;width:18px;"></i>{{ name }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

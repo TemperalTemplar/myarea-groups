@@ -1,0 +1,30 @@
+{% extends "base/layout.html" %}
+{% block title %}Digest Settings — {{ group.name }}{% endblock %}
+{% block breadcrumb %}
+<div class="ma-breadcrumb"><a href="{{ url_for('main.index') }}">Groups</a> <span>»</span> <a href="{{ url_for('groups.view', slug=group.slug) }}">{{ group.name }}</a> <span>»</span> <strong>Settings</strong></div>
+{% endblock %}
+{% block content %}
+<div style="max-width:500px;">
+  <div class="ma-card">
+    <div class="ma-card-header"><i class="bi bi-envelope-fill" style="color:var(--accent);"></i> Digest Settings — {{ group.name }}</div>
+    <div class="ma-card-body" style="padding:20px;">
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="ma-form-group">
+          <label class="ma-label">Email Notifications</label>
+          <select name="digest_opt" class="ma-input">
+            <option value="none" {% if member.digest_opt == 'none' %}selected{% endif %}>None — don't email me</option>
+            <option value="immediate" {% if member.digest_opt == 'immediate' %}selected{% endif %}>Immediate — email me each new post</option>
+            <option value="daily" {% if member.digest_opt == 'daily' %}selected{% endif %}>Daily digest — one email per day</option>
+            <option value="weekly" {% if member.digest_opt == 'weekly' %}selected{% endif %}>Weekly digest — one email per week</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <a href="{{ url_for('groups.view', slug=group.slug) }}" class="ma-btn ma-btn-ghost">Cancel</a>
+          <button type="submit" class="ma-btn ma-btn-primary">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

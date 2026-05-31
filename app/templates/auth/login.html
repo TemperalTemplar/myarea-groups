@@ -1,0 +1,65 @@
+{% extends "base/layout.html" %}
+{% block title %}Log In{% endblock %}
+
+{% block head %}
+<style>
+  .ma-auth-wrap { display:flex; align-items:center; justify-content:center; min-height:calc(100vh - 120px); padding:20px; }
+  .ma-auth-box { width:100%; max-width:400px; background:var(--bg2); border:1px solid var(--border2); border-radius:12px; overflow:hidden; }
+  .ma-auth-logo { background:var(--bg3); border-bottom:1px solid var(--border); padding:24px; text-align:center; }
+  .ma-auth-logo-text { font-family:var(--font-mono); font-size:22px; font-weight:700; letter-spacing:4px; color:var(--accent); }
+  .ma-auth-logo-text span { color:var(--text-dim); }
+  .ma-auth-tagline { font-size:11px; color:var(--text-muted); letter-spacing:2px; margin-top:4px; text-transform:uppercase; }
+  .ma-auth-body { padding:24px; }
+  .ma-auth-footer { padding:16px 24px; border-top:1px solid var(--border); text-align:center; font-size:12px; color:var(--text-muted); background:var(--bg3); }
+  .ma-auth-footer a { color:var(--accent); }
+  .ma-form-group { margin-bottom:16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ma-auth-wrap">
+  <div class="ma-auth-box">
+    <div class="ma-auth-logo">
+      <div class="ma-auth-logo-text">MY<span>AREA</span></div>
+      <div class="ma-auth-tagline">Your space on the internet</div>
+    </div>
+    <div class="ma-auth-body">
+
+      {% if error %}<div class="ma-error">{{ error }}</div>{% endif %}
+
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="ma-form-group">
+          <label class="ma-label">Username or Email</label>
+          <input type="text" name="username" class="ma-input" placeholder="your_username" required autofocus autocomplete="username">
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Password</label>
+          <input type="password" name="password" class="ma-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);cursor:pointer;">
+            <input type="checkbox" name="remember" style="accent-color:var(--accent)"> Remember me
+          </label>
+        </div>
+
+        <button type="submit" class="ma-btn ma-btn-primary" style="width:100%;justify-content:center;">
+          Log In
+        </button>
+      </form>
+
+      {% if sso_enabled %}
+      <div style="text-align:center;margin:16px 0;font-size:11px;color:var(--text-muted);">— or —</div>
+      <a href="{{ url_for('sso.sso_login') }}" class="ma-btn ma-btn-ghost" style="width:100%;justify-content:center;">
+        <i class="bi bi-shield-lock-fill"></i> Log in with SSO
+      </a>
+      {% endif %}
+
+    </div>
+    <div class="ma-auth-footer">
+      New here? <a href="{{ url_for('auth.register') }}">Create an account</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

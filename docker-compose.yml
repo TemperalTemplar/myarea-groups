@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+
+  nginx:
+    image: nginx:alpine
+    container_name: myarea_groups_nginx
+    restart: unless-stopped
+    ports:
+      - "8928:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./app/static:/app/static:ro
+    depends_on:
+      - groups
+    networks:
+      - groups_net
+
+  groups:
+    build: .
+    container_name: myarea_groups
+    restart: unless-stopped
+    environment:
+      FLASK_ENV:               production
+      SECRET_KEY:              "${SECRET_KEY}"
+      DATABASE_URL:            "postgresql://groups:${DB_PASSWORD}@db:5432/myarea_groups"
+      SERVICE_API_KEY:         "${SERVICE_API_KEY}"
+      AUTHENTIK_BASE_URL:      "https://auth.wrds361.com"
+      AUTHENTIK_CLIENT_ID:     "${AUTHENTIK_CLIENT_ID}"
+      AUTHENTIK_CLIENT_SECRET: "${AUTHENTIK_CLIENT_SECRET}"
+      FORUM_URL:               "https://groups.wrds361.com"
+      MAILCOW_API_KEY:         "${MAILCOW_API_KEY}"
+      MAILCOW_BASE_URL:        "https://mail.wrds361.com"
+      SMTP_HOST:               "${SMTP_HOST}"
+      SMTP_PORT:               "${SMTP_PORT}"
+      SMTP_USER:               "${SMTP_USER}"
+      SMTP_PASSWORD:           "${SMTP_PASSWORD}"
+      SMTP_FROM:               "${SMTP_FROM}"
+      MAX_UPLOAD_MB:           "10"
+      UPLOAD_FOLDER:           "/app/uploads"
+    volumes:
+      - groups_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - groups_net
+
+  db:
+    image: postgres:16-alpine
+    container_name: myarea_groups_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       myarea_groups
+      POSTGRES_USER:     groups
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - groups_db_data:/var/lib/postgresql/data
+    networks:
+      - groups_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U groups -d myarea_groups"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  groups_net:
+    driver: bridge
+
+volumes:
+  groups_db_data:
+  groups_uploads:

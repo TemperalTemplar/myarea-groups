@@ -1,0 +1,57 @@
+{% extends "base/layout.html" %}
+{% block title %}Edit — {{ group.name }}{% endblock %}
+{% block breadcrumb %}
+<div class="ma-breadcrumb"><a href="{{ url_for('main.index') }}">Groups</a> <span>»</span> <a href="{{ url_for('groups.view', slug=group.slug) }}">{{ group.name }}</a> <span>»</span> <strong>Edit</strong></div>
+{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+  <div class="ma-card">
+    <div class="ma-card-header"><i class="bi bi-gear-fill" style="color:var(--accent);"></i> Edit Group Settings</div>
+    <div class="ma-card-body" style="padding:20px;">
+      {% if error %}<div class="ma-error">{{ error }}</div>{% endif %}
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="ma-form-group">
+          <label class="ma-label">Name</label>
+          <input type="text" name="name" class="ma-input" value="{{ group.name }}" maxlength="100" required>
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Description</label>
+          <textarea name="description" class="ma-input" rows="3">{{ group.description or '' }}</textarea>
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Privacy</label>
+          <select name="privacy" class="ma-input">
+            <option value="public" {% if group.privacy == 'public' %}selected{% endif %}>Public</option>
+            <option value="private" {% if group.privacy == 'private' %}selected{% endif %}>Private</option>
+            <option value="invite" {% if group.privacy == 'invite' %}selected{% endif %}>Invite Only</option>
+          </select>
+        </div>
+        <div class="ma-form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-dim);">
+            <input type="checkbox" name="digest_enabled" {% if group.digest_enabled %}checked{% endif %} style="accent-color:var(--accent);">
+            Enable email digests
+          </label>
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Digest Interval</label>
+          <select name="digest_interval" class="ma-input">
+            <option value="daily" {% if group.digest_interval == 'daily' %}selected{% endif %}>Daily</option>
+            <option value="weekly" {% if group.digest_interval == 'weekly' %}selected{% endif %}>Weekly</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
+          <form method="post" action="{{ url_for('mod.delete_group', slug=group.slug) }}" onsubmit="return confirm('Permanently delete this group?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="ma-btn ma-btn-danger ma-btn-sm">Delete Group</button>
+          </form>
+          <div style="display:flex;gap:8px;">
+            <a href="{{ url_for('groups.view', slug=group.slug) }}" class="ma-btn ma-btn-ghost">Cancel</a>
+            <button type="submit" class="ma-btn ma-btn-primary">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

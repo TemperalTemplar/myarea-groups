@@ -1,0 +1,20 @@
+{% extends "base/layout.html" %}
+{% block title %}{{ group.name }}{% endblock %}
+{% block content %}
+<div style="max-width:500px;margin:60px auto;text-align:center;">
+  <div class="ma-card">
+    <div class="ma-card-body" style="padding:40px;">
+      <i class="bi bi-lock-fill" style="font-size:40px;color:var(--accent);display:block;margin-bottom:16px;"></i>
+      <h1 style="font-size:18px;font-weight:700;margin-bottom:8px;">{{ group.name }}</h1>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">This is an invite-only group. You need to be invited to see its content.</p>
+      {% if not current_user.is_authenticated %}
+      <a href="{{ url_for('auth.login') }}" class="ma-btn ma-btn-primary">Login</a>
+      {% elif not member %}
+      <span style="font-size:13px;color:var(--text-muted);">Contact a group owner for an invitation.</span>
+      {% else %}
+      <span style="font-size:13px;color:var(--text-muted);">Your request is pending approval.</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends "base/layout.html" %}
+{% block title %}{{ thread.title }} — {{ group.name }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="ma-breadcrumb">
+  <a href="{{ url_for('main.index') }}">Groups</a>
+  <span>»</span>
+  <a href="{{ url_for('groups.view', slug=group.slug) }}">{{ group.name }}</a>
+  <span>»</span>
+  <strong>{{ thread.title | truncate(60) }}</strong>
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 220px;gap:20px;">
+  <div>
+
+    <!-- Thread header -->
+    <div class="ma-card" style="margin-bottom:16px;">
+      <div class="ma-card-body" style="padding:14px 16px;">
+        <h1 style="font-size:17px;font-weight:700;margin-bottom:6px;">{{ thread.title }}</h1>
+        <div style="font-size:11px;color:var(--text-muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          {% if thread.is_pinned %}<span style="background:#d4a017;color:#000;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:700;">📌 Pinned</span>{% endif %}
+          {% if thread.is_locked %}<span style="background:#4a9eff;color:#000;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:700;">🔒 Locked</span>{% endif %}
+          <span>by <strong>{{ thread.author.display }}</strong></span>
+          <span>{{ thread.created_at.strftime('%B %d, %Y') }}</span>
+          <span>{{ thread.view_count }} views · {{ thread.reply_count }} replies</span>
+        </div>
+        {% if member and group.is_mod(current_user.id) %}
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+          <form method="post" action="{{ url_for('mod.toggle_pin', thread_id=thread.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="ma-btn ma-btn-ghost ma-btn-sm">{% if thread.is_pinned %}Unpin{% else %}Pin{% endif %}</button>
+          </form>
+          <form method="post" action="{{ url_for('mod.toggle_lock', thread_id=thread.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="ma-btn ma-btn-ghost ma-btn-sm">{% if thread.is_locked %}Unlock{% else %}Lock{% endif %}</button>
+          </form>
+          <form method="post" action="{{ url_for('mod.delete_thread', thread_id=thread.id) }}" style="display:inline" onsubmit="return confirm('Delete thread?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="ma-btn ma-btn-danger ma-btn-sm">Delete</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Poll -->
+    {% if thread.poll %}
+    <div class="ma-card" style="margin-bottom:16px;">
+      <div class="ma-card-header"><i class="bi bi-bar-chart-fill" style="color:var(--accent);"></i> Poll</div>
+      <div class="ma-card-body" style="padding:14px 16px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">{{ thread.poll.question }}</div>
+        {% if thread.poll.is_closed %}
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Poll closed · {{ thread.poll.total_votes }} votes</div>
+        {% endif %}
+
+        {% if voted_choice_ids or thread.poll.is_closed %}
+          <!-- Results -->
+          {% for choice in thread.poll.choices | sort(attribute='position') %}
+          {% set pct = ((choice.votes|length / thread.poll.total_votes * 100) | int) if thread.poll.total_votes > 0 else 0 %}
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
+              <span {% if choice.id in voted_choice_ids %}style="color:var(--accent);font-weight:700;"{% endif %}>
+                {% if choice.id in voted_choice_ids %}✓ {% endif %}{{ choice.text }}
+              </span>
+              <span style="color:var(--text-muted);">{{ choice.votes|length }} ({{ pct }}%)</span>
+            </div>
+            <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:{{ pct }}%;background:var(--accent);border-radius:3px;transition:width .3s;"></div>
+            </div>
+          </div>
+          {% endfor %}
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">{{ thread.poll.total_votes }} total vote{{ 's' if thread.poll.total_votes != 1 else '' }}</div>
+
+        {% elif current_user.is_authenticated and member and member.role != 'pending' %}
+          <!-- Voting form -->
+          <form method="post" action="{{ url_for('groups.vote_poll', slug=group.slug, thread_id=thread.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% for choice in thread.poll.choices | sort(attribute='position') %}
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);">
+              <input type="{% if thread.poll.multi_vote %}checkbox{% else %}radio{% endif %}"
+                     name="choice" value="{{ choice.id }}"
+                     style="accent-color:var(--accent);">
+              {{ choice.text }}
+            </label>
+            {% endfor %}
+            <button type="submit" class="ma-btn ma-btn-primary ma-btn-sm" style="margin-top:10px;">
+              <i class="bi bi-check-lg"></i> Submit Vote
+            </button>
+          </form>
+        {% else %}
+          <div style="font-size:13px;color:var(--text-muted);">Join the group to vote.</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Top pagination -->
+    {% if posts.pages > 1 %}
+    <div class="ma-pagination" style="padding:4px 0 12px;">
+      {% for p in posts.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+        {% if p %}<a class="ma-page {% if p == posts.page %}active{% endif %}" href="?page={{ p }}">{{ p }}</a>
+        {% else %}<span class="ma-page disabled">…</span>{% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Posts -->
+    <div>
+      {% for post in posts.items %}
+      <div id="post-{{ post.id }}" style="display:grid;grid-template-columns:140px 1fr;border:1px solid var(--border);border-top:none;background:var(--bg2);">
+        {% if loop.first %}<style>#post-{{ post.id }}{border-top:1px solid var(--border);border-radius:6px 6px 0 0;}</style>{% endif %}
+        {% if loop.last %}<style>#post-{{ post.id }}:last-child{border-radius:0 0 6px 6px;}</style>{% endif %}
+
+        <!-- User col -->
+        <div style="padding:14px 12px;border-right:1px solid var(--border);background:var(--bg3);text-align:center;">
+          <div style="width:54px;height:54px;border-radius:6px;border:2px solid var(--border2);background:var(--bg);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--text-muted);">
+            {% if post.author.avatar_url %}
+            <img src="{{ post.author.avatar_url }}" style="width:54px;height:54px;border-radius:6px;object-fit:cover;" alt="">
+            {% else %}{{ post.author.display[0].upper() }}{% endif %}
+          </div>
+          <span style="font-weight:700;color:var(--accent);font-size:13px;display:block;">{{ post.author.display }}</span>
+          <span style="font-size:10px;color:var(--text-muted);display:block;margin-top:2px;">{{ post.author.memberships.filter_by(group_id=group.id).first().role | title if post.author.memberships.filter_by(group_id=group.id).first() else '' }}</span>
+        </div>
+
+        <!-- Body col -->
+        <div style="padding:12px 16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border);padding-bottom:8px;flex-wrap:wrap;">
+            <span style="font-weight:700;color:var(--text-dim);">#{{ post.post_number }}</span>
+            <span style="flex:1;">{{ post.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+            {% if post.email_from %}<span style="font-size:10px;"><i class="bi bi-envelope"></i> via email</span>{% endif %}
+            <div style="display:flex;gap:6px;">
+              {% if current_user.is_authenticated and member and member.role != 'pending' and not thread.is_locked %}
+              <button class="btn-quote ma-btn ma-btn-ghost ma-btn-sm"
+                      data-post-id="{{ post.id }}"
+                      data-username="{{ post.author.display }}"
+                      data-body="{{ post.body | truncate(300) | e }}">quote</button>
+              {% endif %}
+              {% if member and group.is_mod(current_user.id) %}
+              <form method="post" action="{{ url_for('mod.delete_post', post_id=post.id) }}" style="display:inline" onsubmit="return confirm('Remove post?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="ma-btn ma-btn-danger ma-btn-sm">del</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if post.quoted_post %}
+          <div style="border-left:3px solid var(--border2);background:var(--bg3);padding:8px 12px;margin-bottom:10px;font-size:13px;color:var(--text-dim);border-radius:0 4px 4px 0;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">{{ post.quoted_post.author.display }} wrote:</div>
+            {{ post.quoted_post.body | truncate(300) }}
+          </div>
+          {% endif %}
+
+          <div style="font-size:14px;line-height:1.7;color:var(--text);word-break:break-word;">
+            {{ post.body_html | safe }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Bottom pagination -->
+    {% if posts.pages > 1 %}
+    <div class="ma-pagination">
+      {% if posts.has_prev %}<a class="ma-page" href="?page={{ posts.prev_num }}">« Prev</a>{% endif %}
+      {% for p in posts.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+        {% if p %}<a class="ma-page {% if p == posts.page %}active{% endif %}" href="?page={{ p }}">{{ p }}</a>
+        {% else %}<span class="ma-page disabled">…</span>{% endif %}
+      {% endfor %}
+      {% if posts.has_next %}<a class="ma-page" href="?page={{ posts.next_num }}">Next »</a>{% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Reply box -->
+    {% if current_user.is_authenticated and member and member.role != 'pending' %}
+      {% if thread.is_locked and not group.is_mod(current_user.id) %}
+      <div style="border:1px dashed #4a9eff;color:#4a9eff;padding:12px 16px;text-align:center;font-size:13px;margin-top:16px;border-radius:6px;">
+        🔒 This thread is locked.
+      </div>
+      {% else %}
+      <div class="ma-reply-box" id="reply-box">
+        <div class="ma-reply-header"><span style="color:var(--accent)">//</span> Post Reply</div>
+        <div id="quote-preview" style="display:none;margin:10px 14px 0;border-left:3px solid var(--border2);background:var(--bg3);padding:8px 12px;font-size:12px;color:var(--text-dim);position:relative;border-radius:0 4px 4px 0;">
+          <span id="quote-preview-text"></span>
+          <span id="remove-quote" style="position:absolute;top:4px;right:8px;cursor:pointer;color:var(--text-muted);">✕</span>
+        </div>
+        <form method="post" action="{{ url_for('groups.reply', slug=group.slug, thread_id=thread.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="quote_post_id" id="quote-post-id" value="">
+          <div class="ma-reply-toolbar">
+            <button type="button" class="ma-toolbar-btn" data-tag="b"><strong>B</strong></button>
+            <button type="button" class="ma-toolbar-btn" data-tag="i"><em>I</em></button>
+            <button type="button" class="ma-toolbar-btn" data-tag="u"><u>U</u></button>
+            <button type="button" class="ma-toolbar-btn" data-tag="code">[ ]</button>
+            <button type="button" class="ma-toolbar-btn" data-wrap-open="[url=]" data-wrap-close="[/url]">URL</button>
+          </div>
+          <textarea id="reply-textarea" name="body" class="bbcode-target ma-input ma-textarea"
+                    style="border-radius:0;border-left:none;border-right:none;min-height:120px;"
+                    placeholder="Write your reply…" required></textarea>
+          <div class="ma-reply-footer">
+            <button type="submit" class="ma-btn ma-btn-primary">Post Reply »</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+    {% elif not current_user.is_authenticated %}
+    <div style="text-align:center;padding:20px;border:1px dashed var(--border);margin-top:16px;font-size:13px;color:var(--text-dim);border-radius:6px;">
+      <a href="{{ url_for('auth.login') }}">Log in</a> and join the group to reply.
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div class="ma-card" style="margin-bottom:16px;">
+      <div class="ma-card-header"><i class="bi bi-info-circle" style="color:var(--accent);"></i> Thread</div>
+      <div class="ma-card-body" style="padding:12px 14px;font-size:12px;color:var(--text-dim);">
+        <div style="margin-bottom:4px;">{{ thread.reply_count }} replies</div>
+        <div style="margin-bottom:4px;">{{ thread.view_count }} views</div>
+        <div>Started {{ thread.created_at.strftime('%b %d, %Y') }}</div>
+      </div>
+    </div>
+    <div class="ma-card">
+      <div class="ma-card-header"><i class="bi bi-arrow-left" style="color:var(--accent);"></i> Navigate</div>
+      <div class="ma-card-body" style="padding:8px 0;">
+        <a href="{{ url_for('groups.view', slug=group.slug) }}"
+           style="display:block;padding:8px 14px;font-size:12px;color:var(--text-dim);transition:background .15s;"
+           onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+          ← {{ group.name }}
+        </a>
+        <a href="{{ url_for('main.index') }}"
+           style="display:block;padding:8px 14px;font-size:12px;color:var(--text-dim);transition:background .15s;"
+           onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+          All Groups
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

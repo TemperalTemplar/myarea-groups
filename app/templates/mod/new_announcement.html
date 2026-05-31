@@ -1,0 +1,30 @@
+{% extends "base/layout.html" %}
+{% block title %}New Announcement{% endblock %}
+{% block breadcrumb %}
+<div class="ma-breadcrumb"><a href="{{ url_for('main.index') }}">Groups</a> <span>»</span> <a href="{{ url_for('groups.view', slug=group.slug) }}">{{ group.name }}</a> <span>»</span> <strong>New Announcement</strong></div>
+{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+  <div class="ma-card">
+    <div class="ma-card-header"><i class="bi bi-megaphone-fill" style="color:var(--accent);"></i> Post Announcement</div>
+    <div class="ma-card-body" style="padding:20px;">
+      {% if error %}<div class="ma-error">{{ error }}</div>{% endif %}
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="ma-form-group">
+          <label class="ma-label">Title</label>
+          <input type="text" name="title" class="ma-input" maxlength="250" required autofocus>
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Body</label>
+          <textarea name="body" class="ma-input ma-textarea bbcode-target" required></textarea>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <a href="{{ url_for('groups.view', slug=group.slug) }}" class="ma-btn ma-btn-ghost">Cancel</a>
+          <button type="submit" class="ma-btn ma-btn-primary"><i class="bi bi-megaphone"></i> Post Announcement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

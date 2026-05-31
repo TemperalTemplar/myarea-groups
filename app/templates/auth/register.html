@@ -1,0 +1,62 @@
+{% extends "base/layout.html" %}
+{% block title %}Register{% endblock %}
+
+{% block head %}
+<style>
+  .ma-auth-wrap { display:flex; align-items:center; justify-content:center; min-height:calc(100vh - 120px); padding:20px; }
+  .ma-auth-box { width:100%; max-width:400px; background:var(--bg2); border:1px solid var(--border2); border-radius:12px; overflow:hidden; }
+  .ma-auth-logo { background:var(--bg3); border-bottom:1px solid var(--border); padding:24px; text-align:center; }
+  .ma-auth-logo-text { font-family:var(--font-mono); font-size:22px; font-weight:700; letter-spacing:4px; color:var(--accent); }
+  .ma-auth-logo-text span { color:var(--text-dim); }
+  .ma-auth-tagline { font-size:11px; color:var(--text-muted); letter-spacing:2px; margin-top:4px; text-transform:uppercase; }
+  .ma-auth-body { padding:24px; }
+  .ma-auth-footer { padding:16px 24px; border-top:1px solid var(--border); text-align:center; font-size:12px; color:var(--text-muted); background:var(--bg3); }
+  .ma-auth-footer a { color:var(--accent); }
+  .ma-form-group { margin-bottom:16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ma-auth-wrap">
+  <div class="ma-auth-box">
+    <div class="ma-auth-logo">
+      <div class="ma-auth-logo-text">MY<span>AREA</span></div>
+      <div class="ma-auth-tagline">Create your account</div>
+    </div>
+    <div class="ma-auth-body">
+
+      {% if error %}<div class="ma-error">{{ error }}</div>{% endif %}
+
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="ma-form-group">
+          <label class="ma-label">Username</label>
+          <input type="text" name="username" class="ma-input" placeholder="your_username" minlength="3" maxlength="40" required autofocus autocomplete="username">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">3–40 characters. Your public handle.</div>
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Email</label>
+          <input type="email" name="email" class="ma-input" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Password</label>
+          <input type="password" name="password" class="ma-input" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Confirm Password</label>
+          <input type="password" name="confirm" class="ma-input" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+
+        <button type="submit" class="ma-btn ma-btn-primary" style="width:100%;justify-content:center;">
+          Create Account
+        </button>
+      </form>
+
+    </div>
+    <div class="ma-auth-footer">
+      Already registered? <a href="{{ url_for('auth.login') }}">Log in</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

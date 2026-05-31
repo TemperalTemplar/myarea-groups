@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Forum{% endblock %} | MyArea</title>
+
+  <!-- Fonts: Archivo Black + Space Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <!-- MyArea shared CSS (served from Social — or inline below) -->
+  <style>
+    :root {
+      --bg:          #0d0f14;
+      --bg2:         #111520;
+      --bg3:         #161b28;
+      --border:      #1e2535;
+      --border2:     #2a3448;
+      --accent:      #e63946;
+      --accent2:     #ff4d5a;
+      --text:        #e8eaf0;
+      --text-dim:    #8899bb;
+      --text-muted:  #4a5a7a;
+      --font-display:'Archivo Black', sans-serif;
+      --font-mono:   'Space Mono', 'Courier New', monospace;
+      --green:       #00d4a0;
+      --yellow:      #f59e0b;
+      --purple:      #7c3aed;
+      --cyan:        #06b6d4;
+    }
+    [data-theme="light"] {
+      --bg:#f0f2f5; --bg2:#ffffff; --bg3:#e8eaed;
+      --border:#dde1e7; --border2:#c8cdd6;
+      --text:#111520; --text-dim:#444c5e; --text-muted:#7a8499;
+    }
+    [data-theme="high-contrast"] {
+      --bg:#000; --bg2:#0a0a0a; --bg3:#111;
+      --border:#fff; --border2:#fff;
+      --text:#fff; --text-dim:#ccc; --text-muted:#888;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 14px; line-height: 1.6; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent2); }
+
+    /* ── Nav ── */
+    .ma-nav { background: var(--bg2); border-bottom: 1px solid var(--border2); position: sticky; top: 0; z-index: 1000; }
+    .ma-nav-inner { display: flex; align-items: center; gap: 12px; max-width: 1200px; margin: 0 auto; padding: 0 16px; height: 52px; }
+    .ma-logo { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 3px; color: var(--accent); text-decoration: none; white-space: nowrap; }
+    .ma-logo span { color: var(--text-dim); }
+    .ma-logo:hover { color: var(--accent2); text-decoration: none; }
+    .ma-nav-links { display: flex; align-items: center; gap: 2px; flex: 1; overflow-x: auto; }
+    .ma-nav-link { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: var(--text-dim); text-decoration: none; white-space: nowrap; transition: all .15s; }
+    .ma-nav-link:hover, .ma-nav-link.active { background: rgba(230,57,70,.08); color: var(--text); text-decoration: none; }
+    .ma-nav-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .ma-icon-btn { background: transparent; border: 1px solid var(--border2); border-radius: 6px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 15px; text-decoration: none; transition: all .15s; }
+    .ma-icon-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── Main ── */
+    .ma-main { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
+
+    /* ── Cards ── */
+    .ma-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; }
+    .ma-card-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .ma-card-header .accent { color: var(--accent); }
+    .ma-card-body { padding: 16px; }
+
+    /* ── Buttons ── */
+    .ma-btn { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 12px; padding: 7px 14px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; transition: all .15s; text-decoration: none; }
+    .ma-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .ma-btn-primary:hover { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+    .ma-btn-ghost { background: transparent; border-color: var(--border2); color: var(--text-dim); }
+    .ma-btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+    .ma-btn-danger { background: transparent; border-color: var(--accent); color: var(--accent); }
+    .ma-btn-danger:hover { background: var(--accent); color: #fff; }
+    .ma-btn-sm { font-size: 11px; padding: 4px 10px; }
+
+    /* ── Forms ── */
+    .ma-input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 8px 12px; border-radius: 6px; outline: none; transition: border-color .15s; }
+    .ma-input:focus { border-color: var(--accent); }
+    .ma-textarea { resize: vertical; min-height: 120px; }
+    .ma-label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+    .ma-form-group { margin-bottom: 16px; }
+    .ma-error { background: rgba(230,57,70,.1); border: 1px solid var(--accent); color: var(--accent); padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
+
+    /* ── Thread/Forum specific ── */
+    .forum-category-block { margin-bottom: 24px; }
+    .forum-category-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg3); border-left: 3px solid var(--accent); border-radius: 0 6px 0 0; font-size: 14px; font-weight: 700; }
+    .forum-table { width: 100%; border-collapse: collapse; background: var(--bg2); border: 1px solid var(--border); border-radius: 0 0 6px 6px; overflow: hidden; }
+    .forum-table th { padding: 8px 14px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid var(--border); background: var(--bg3); text-align: left; font-weight: normal; }
+    .forum-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .forum-table tr:last-child td { border-bottom: none; }
+    .forum-table tr:hover td { background: var(--bg3); }
+    .thread-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .thread-title:hover { color: var(--accent); text-decoration: none; }
+    .thread-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .ma-badge-pin { background: #d4a017; color: #000; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+    .ma-badge-lock { background: #4a9eff; color: #000; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+    .ma-badge-trust { background: var(--bg3); border: 1px solid var(--border2); color: var(--text-dim); font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+
+    /* ── Posts ── */
+    .post-wrap { border: 1px solid var(--border); background: var(--bg2); margin-bottom: -1px; }
+    .post-wrap:first-child { border-radius: 8px 8px 0 0; }
+    .post-wrap:last-child { border-radius: 0 0 8px 8px; margin-bottom: 0; }
+    .post-grid { display: grid; grid-template-columns: 150px 1fr; }
+    .post-user-col { padding: 14px 12px; border-right: 1px solid var(--border); background: var(--bg3); text-align: center; }
+    .post-body-col { padding: 12px 16px; }
+    .post-avatar { width: 54px; height: 54px; border-radius: 6px; border: 2px solid var(--border2); object-fit: cover; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; background: var(--bg); font-size: 22px; color: var(--text-muted); }
+    .post-username { font-weight: 700; color: var(--accent); font-size: 13px; display: block; }
+    .post-top-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 11px; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 8px; flex-wrap: wrap; }
+    .post-content { font-size: 14px; line-height: 1.7; color: var(--text); word-break: break-word; }
+    .post-content p { margin-bottom: 8px; }
+    .post-content p:last-child { margin-bottom: 0; }
+    .post-quote { border-left: 3px solid var(--border2); background: var(--bg3); padding: 8px 12px; margin-bottom: 10px; font-size: 13px; color: var(--text-dim); border-radius: 0 4px 4px 0; }
+
+    /* ── Pagination ── */
+    .ma-pagination { display: flex; gap: 4px; padding: 12px 0; flex-wrap: wrap; }
+    .ma-page { display: inline-block; padding: 4px 10px; border: 1px solid var(--border2); color: var(--text-dim); font-size: 12px; border-radius: 4px; transition: all .15s; }
+    .ma-page:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+    .ma-page.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .ma-page.disabled { color: var(--text-muted); pointer-events: none; }
+
+    /* ── Breadcrumb ── */
+    .ma-breadcrumb { font-size: 12px; color: var(--text-muted); padding: 8px 0 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .ma-breadcrumb a { color: var(--text-dim); }
+    .ma-breadcrumb a:hover { color: var(--accent); }
+
+    /* ── Flash ── */
+    .ma-flash { padding: 8px 14px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; border-left: 3px solid; }
+    .ma-flash.success { border-color: var(--green); color: var(--green); background: rgba(0,212,160,.06); }
+    .ma-flash.warning { border-color: var(--yellow); color: var(--yellow); background: rgba(245,158,11,.06); }
+    .ma-flash.danger  { border-color: var(--accent); color: var(--accent); background: rgba(230,57,70,.06); }
+    .ma-flash.info    { border-color: var(--cyan); color: var(--cyan); background: rgba(6,182,212,.06); }
+
+    /* ── Footer ── */
+    .ma-footer { border-top: 1px solid var(--border); padding: 16px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-muted); max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 8px; }
+    .ma-footer-logo { font-family: var(--font-mono); letter-spacing: 3px; color: var(--accent); font-weight: 700; }
+
+    /* ── Reply box ── */
+    .ma-reply-box { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 20px; }
+    .ma-reply-header { background: var(--bg3); padding: 10px 14px; font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--border); }
+    .ma-reply-toolbar { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 6px 10px; display: flex; gap: 4px; flex-wrap: wrap; }
+    .ma-toolbar-btn { background: var(--bg2); border: 1px solid var(--border2); color: var(--text-dim); font-family: var(--font-mono); font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer; transition: all .15s; }
+    .ma-toolbar-btn:hover { border-color: var(--accent); color: var(--text); }
+    .ma-reply-footer { background: var(--bg3); border-top: 1px solid var(--border); padding: 8px 12px; display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* ── Mod toolbar ── */
+    .ma-mod-bar { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 12px; background: rgba(230,57,70,.04); border: 1px dashed rgba(230,57,70,.3); border-radius: 6px; margin-top: 8px; font-size: 11px; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg2); } ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    ::selection { background: var(--accent); color: #fff; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Top Nav ── -->
+<nav class="ma-nav">
+  <div class="ma-nav-inner">
+    <a href="{{ url_for('main.index') }}" class="ma-logo">MY<span>AREA</span></a>
+
+    <div class="ma-nav-links">
+      <a href="{{ url_for('main.index') }}" class="ma-nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">
+        <i class="bi bi-chat-square-text-fill"></i> Forum
+      </a>
+      {% if current_user.is_authenticated and current_user.is_mod %}
+      <a href="{{ url_for('mod.dashboard') }}" class="ma-nav-link">
+        <i class="bi bi-shield-fill"></i> Mod
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="ma-nav-right">
+      <!-- Theme -->
+      <button onclick="toggleTheme()" id="ma-theme-btn" class="ma-icon-btn" title="Toggle theme">&#9790;</button>
+      <button onclick="toggleContrast()" class="ma-icon-btn" title="High contrast" style="font-size:10px;letter-spacing:1px;width:auto;padding:0 8px;">HC</button>
+
+      <!-- 9-dot Launcher -->
+      <div style="position:relative;display:inline-block" id="ma-launcher-wrap">
+        <button id="ma-launcher-btn" aria-label="MyArea app launcher" aria-expanded="false" class="ma-icon-btn">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="4" height="4" rx="1" fill="#888"/><rect x="6" y="1" width="4" height="4" rx="1" fill="#888"/><rect x="11" y="1" width="4" height="4" rx="1" fill="#888"/><rect x="1" y="6" width="4" height="4" rx="1" fill="#888"/><rect x="6" y="6" width="4" height="4" rx="1" fill="#888"/><rect x="11" y="6" width="4" height="4" rx="1" fill="#888"/><rect x="1" y="11" width="4" height="4" rx="1" fill="#888"/><rect x="6" y="11" width="4" height="4" rx="1" fill="#888"/><rect x="11" y="11" width="4" height="4" rx="1" fill="#888"/></svg>
+        </button>
+        <div id="ma-launcher-dd" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:300px;background:#1a2030;border:1px solid #2a3448;border-radius:8px;z-index:9999">
+          <div style="padding:10px 14px 8px;border-bottom:1px solid #243040;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-family:'Courier New',monospace;font-size:12px;letter-spacing:3px;color:#e63946;font-weight:700">MY<span style="color:#8899bb">AREA</span></div>
+              <div style="font-size:9px;color:#4a5a7a;letter-spacing:2px;font-family:'Courier New',monospace">SOVEREIGN PLATFORM</div>
+            </div>
+            <div style="width:6px;height:6px;border-radius:50%;background:#00d4a0"></div>
+          </div>
+          <div style="font-size:9px;color:#4a5a7a;letter-spacing:2px;font-family:'Courier New',monospace;padding:10px 14px 4px">MYAREA APPS</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:4px 8px 8px">
+            <a href="https://myarea.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:36px;height:36px;border-radius:6px;background:rgba(230,57,70,0.15);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span style="font-size:9px;color:#8899bb;letter-spacing:1px;font-family:'Courier New',monospace;text-transform:uppercase">Social</span></a>
+            <a href="https://positive.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:36px;height:36px;border-radius:6px;background:rgba(0,212,160,0.15);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4a0" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span style="font-size:9px;color:#8899bb;letter-spacing:1px;font-family:'Courier New',monospace;text-transform:uppercase">Positive</span></a>
+            <a href="https://journal.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:36px;height:36px;border-radius:6px;background:rgba(245,158,11,0.15);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><span style="font-size:9px;color:#8899bb;letter-spacing:1px;font-family:'Courier New',monospace;text-transform:uppercase">Journal</span></a>
+            <a href="https://geozones.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:36px;height:36px;border-radius:6px;background:rgba(200,200,0,0.1);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cccc00" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><span style="font-size:9px;color:#8899bb;letter-spacing:1px;font-family:'Courier New',monospace;text-transform:uppercase">GeoZones</span></a>
+            <a href="https://myareagames.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:36px;height:36px;border-radius:6px;background:rgba(124,58,237,0.15);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M7 12h.01M17 12h.01"/></svg></div><span style="font-size:9px;color:#8899bb;letter-spacing:1px;font-family:'Courier New',monospace;text-transform:uppercase">Games</span></a>
+            <a href="https://chat.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:36px;height:36px;border-radius:6px;background:rgba(6,182,212,0.15);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span style="font-size:9px;color:#8899bb;letter-spacing:1px;font-family:'Courier New',monospace;text-transform:uppercase">Chat</span></a>
+            <a href="https://groups.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:6px;text-decoration:none;border:1px solid #1a2040;background:rgba(230,57,70,0.06)"><div style="width:36px;height:36px;border-radius:6px;background:rgba(230,57,70,0.15);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span style="font-size:9px;color:#e63946;letter-spacing:1px;font-family:'Courier New',monospace;text-transform:uppercase">Forum</span></a>
+          </div>
+          <div style="height:1px;background:#243040;margin:0 8px"></div>
+          <div style="font-size:9px;color:#4a5a7a;letter-spacing:2px;font-family:'Courier New',monospace;padding:10px 14px 4px">TOOLS</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:4px 8px 10px">
+            <a href="https://mail.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:28px;height:28px;border-radius:4px;background:rgba(230,57,70,0.12);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><span style="font-size:8px;color:#5a6a8a;letter-spacing:0.5px;font-family:'Courier New',monospace;text-transform:uppercase">Mail</span></a>
+            <a href="https://cloud.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:28px;height:28px;border-radius:4px;background:rgba(0,130,201,0.12);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0082c9" stroke-width="1.5"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div><span style="font-size:8px;color:#5a6a8a;letter-spacing:0.5px;font-family:'Courier New',monospace;text-transform:uppercase">Cloud</span></a>
+            <a href="https://vault.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:28px;height:28px;border-radius:4px;background:rgba(23,93,220,0.12);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#175DDC" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><span style="font-size:8px;color:#5a6a8a;letter-spacing:0.5px;font-family:'Courier New',monospace;text-transform:uppercase">Vault</span></a>
+            <a href="https://radio.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:28px;height:28px;border-radius:4px;background:rgba(226,83,60,0.12);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e2533c" stroke-width="1.5"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49"/></svg></div><span style="font-size:8px;color:#5a6a8a;letter-spacing:0.5px;font-family:'Courier New',monospace;text-transform:uppercase">Radio</span></a>
+            <a href="https://family.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:28px;height:28px;border-radius:4px;background:rgba(22,163,74,0.12);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><span style="font-size:8px;color:#5a6a8a;letter-spacing:0.5px;font-family:'Courier New',monospace;text-transform:uppercase">Family</span></a>
+            <a href="https://fitness.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:28px;height:28px;border-radius:4px;background:rgba(220,38,38,0.12);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><span style="font-size:8px;color:#5a6a8a;letter-spacing:0.5px;font-family:'Courier New',monospace;text-transform:uppercase">Fitness</span></a>
+            <a href="https://ai.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:28px;height:28px;border-radius:4px;background:rgba(139,92,246,0.12);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h.01M15 9h.01M9 15h6"/></svg></div><span style="font-size:8px;color:#5a6a8a;letter-spacing:0.5px;font-family:'Courier New',monospace;text-transform:uppercase">AI</span></a>
+            <a href="https://apps.wrds361.com" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:6px;text-decoration:none;border:1px solid transparent"><div style="width:28px;height:28px;border-radius:4px;background:rgba(100,120,160,0.12);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6478a0" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div><span style="font-size:8px;color:#5a6a8a;letter-spacing:0.5px;font-family:'Courier New',monospace;text-transform:uppercase">All Apps</span></a>
+          </div>
+          <div style="border-top:1px solid #243040;padding:8px 14px;display:flex;align-items:center;justify-content:space-between">
+            <a href="https://apps.wrds361.com" target="_blank" style="font-size:9px;color:#4a5a7a;letter-spacing:1px;font-family:'Courier New',monospace;text-decoration:none;text-transform:uppercase">apps.wrds361.com</a>
+            <span style="font-size:9px;color:#2a3a5a;font-family:'Courier New',monospace;letter-spacing:1px">SOVEREIGN · SELF-HOSTED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auth -->
+      {% if current_user.is_authenticated %}
+      <div style="position:relative;display:inline-block" id="avatarWrap">
+        <button class="ma-icon-btn" id="avatarBtn" style="width:auto;padding:0 10px;gap:6px;font-size:12px;">
+          <i class="bi bi-person-fill"></i>
+          <span>{{ current_user.display }}</span>
+          <i class="bi bi-chevron-down" style="font-size:9px;"></i>
+        </button>
+        <div id="avatarDrop" style="display:none;position:absolute;top:calc(100% + 8px);right:0;min-width:160px;background:#1a2030;border:1px solid #2a3448;border-radius:8px;z-index:9999;padding:6px 0;">
+          <a href="#" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:#8899bb;text-decoration:none;font-family:'Courier New',monospace;">
+            <i class="bi bi-person"></i> Profile
+          </a>
+          {% if current_user.is_mod %}
+          <a href="{{ url_for('mod.dashboard') }}" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:#8899bb;text-decoration:none;font-family:'Courier New',monospace;">
+            <i class="bi bi-shield-fill"></i> Mod Panel
+          </a>
+          {% endif %}
+          <hr style="border-color:#2a3448;margin:4px 0;">
+          <a href="{{ url_for('auth.logout') }}" style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:#e63946;text-decoration:none;font-family:'Courier New',monospace;">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
+        </div>
+      </div>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="ma-btn ma-btn-ghost ma-btn-sm">Login</a>
+      <a href="{{ url_for('auth.register') }}" class="ma-btn ma-btn-primary ma-btn-sm">Register</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<!-- ── Flash messages ── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div style="max-width:1200px;margin:0 auto;padding:8px 16px 0;">
+    {% for category, message in messages %}
+      <div class="ma-flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ── Content ── -->
+<main class="ma-main">
+  {% block breadcrumb %}{% endblock %}
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ── -->
+<footer style="border-top:1px solid var(--border);padding:16px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;flex-wrap:wrap;gap:8px;">
+  <div>
+    <span style="font-family:'Courier New',monospace;letter-spacing:3px;color:#e63946;font-weight:700">MYAREA</span>
+    <span style="margin-left:8px;">Forum &copy; 2026</span>
+  </div>
+  <div>
+    <a href="https://apps.wrds361.com" style="color:var(--text-muted);">apps.wrds361.com</a>
+    <span style="margin:0 8px;">·</span>
+    <span>SOVEREIGN · SELF-HOSTED</span>
+  </div>
+</footer>
+
+<!-- ── Scripts ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+// Launcher toggle
+(function(){
+  var btn=document.getElementById('ma-launcher-btn');
+  var dd=document.getElementById('ma-launcher-dd');
+  if(!btn||!dd)return;
+  btn.addEventListener('click',function(e){e.stopPropagation();var o=dd.style.display==='block';dd.style.display=o?'none':'block';btn.setAttribute('aria-expanded',o?'false':'true');});
+  document.addEventListener('click',function(){dd.style.display='none';btn.setAttribute('aria-expanded','false');});
+  dd.addEventListener('click',function(e){e.stopPropagation();});
+})();
+
+// Avatar dropdown
+(function(){
+  var btn=document.getElementById('avatarBtn');
+  var dd=document.getElementById('avatarDrop');
+  if(!btn||!dd)return;
+  btn.addEventListener('click',function(e){e.stopPropagation();dd.style.display=dd.style.display==='block'?'none':'block';});
+  document.addEventListener('click',function(){if(dd)dd.style.display='none';});
+})();
+
+// Theme
+function toggleTheme(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var btn=document.getElementById('ma-theme-btn');
+  if(cur==='light'){document.documentElement.removeAttribute('data-theme');localStorage.removeItem('ma_groups_theme');if(btn)btn.innerHTML='&#9790;';}
+  else{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('ma_groups_theme','light');if(btn)btn.innerHTML='&#9788;';}
+}
+function toggleContrast(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  if(cur==='high-contrast'){document.documentElement.removeAttribute('data-theme');localStorage.removeItem('ma_groups_theme');}
+  else{document.documentElement.setAttribute('data-theme','high-contrast');localStorage.setItem('ma_groups_theme','high-contrast');}
+}
+(function(){
+  var t=localStorage.getItem('ma_groups_theme');
+  if(t)document.documentElement.setAttribute('data-theme',t);
+  var btn=document.getElementById('ma-theme-btn');
+  if(btn&&t==='light')btn.innerHTML='&#9788;';
+})();
+
+// CSRF helper
+function getCsrf(){var el=document.querySelector('meta[name="csrf-token"]');return el?el.getAttribute('content'):'';}
+
+// Quote injection
+document.querySelectorAll('.btn-quote').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var ta=document.getElementById('reply-textarea');
+    var qp=document.getElementById('quote-post-id');
+    var qprev=document.getElementById('quote-preview');
+    var qt=document.getElementById('quote-preview-text');
+    if(qp)qp.value=btn.dataset.postId;
+    if(qt)qt.textContent=btn.dataset.username+': '+btn.dataset.body.slice(0,200);
+    if(qprev)qprev.style.display='block';
+    if(ta){ta.scrollIntoView({behavior:'smooth',block:'center'});ta.focus();}
+  });
+});
+document.addEventListener('click',function(e){
+  if(e.target&&e.target.id==='remove-quote'){
+    var qp=document.getElementById('quote-post-id');
+    var qprev=document.getElementById('quote-preview');
+    if(qp)qp.value='';
+    if(qprev)qprev.style.display='none';
+  }
+});
+
+// Like toggle
+document.querySelectorAll('.btn-like').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    fetch('/api/like/'+btn.dataset.postId,{method:'POST',headers:{'X-CSRFToken':getCsrf(),'Content-Type':'application/json'}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.error){alert(d.error);return;}
+      btn.classList.toggle('liked',d.liked);
+      var c=btn.querySelector('.like-count');
+      if(c)c.textContent=d.count>0?' '+d.count:'';
+    });
+  });
+});
+
+// BBCode toolbar
+document.querySelectorAll('.ma-toolbar-btn[data-tag]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var ta=document.querySelector('.bbcode-target');
+    if(!ta)return;
+    var s=ta.selectionStart,e=ta.selectionEnd,sel=ta.value.substring(s,e),tag=btn.dataset.tag;
+    ta.value=ta.value.substring(0,s)+'['+tag+']'+sel+'[/'+tag+']'+ta.value.substring(e);
+    ta.selectionStart=s+tag.length+2;ta.selectionEnd=s+tag.length+2+sel.length;ta.focus();
+  });
+});
+
+// Highlight anchor post
+(function(){
+  var h=window.location.hash;
+  if(h&&h.startsWith('#post-')){var el=document.querySelector(h);if(el){el.style.borderLeft='3px solid #e63946';el.style.background='rgba(230,57,70,0.04)';}}
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

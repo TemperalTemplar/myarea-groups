@@ -1,0 +1,86 @@
+{% extends "base/layout.html" %}
+{% block title %}New Thread — {{ group.name }}{% endblock %}
+{% block breadcrumb %}
+<div class="ma-breadcrumb"><a href="{{ url_for('main.index') }}">Groups</a> <span>»</span> <a href="{{ url_for('groups.view', slug=group.slug) }}">{{ group.name }}</a> <span>»</span> <strong>New Thread</strong></div>
+{% endblock %}
+{% block content %}
+<div style="max-width:700px;">
+  <div class="ma-card">
+    <div class="ma-card-header"><i class="bi bi-plus-circle-fill" style="color:var(--accent);"></i> New Thread in {{ group.name }}</div>
+    <div class="ma-card-body" style="padding:20px;">
+      {% if error %}<div class="ma-error">{{ error }}</div>{% endif %}
+      <form method="post" id="new-thread-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="ma-form-group">
+          <label class="ma-label">Title</label>
+          <input type="text" name="title" class="ma-input" maxlength="250" required autofocus placeholder="Thread title">
+        </div>
+        <div class="ma-form-group">
+          <label class="ma-label">Post</label>
+          <div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;">
+            <button type="button" class="ma-toolbar-btn" data-tag="b"><strong>B</strong></button>
+            <button type="button" class="ma-toolbar-btn" data-tag="i"><em>I</em></button>
+            <button type="button" class="ma-toolbar-btn" data-tag="u"><u>U</u></button>
+            <button type="button" class="ma-toolbar-btn" data-tag="code">[ ]</button>
+            <button type="button" class="ma-toolbar-btn" data-wrap-open="[url=]" data-wrap-close="[/url]">URL</button>
+          </div>
+          <textarea name="body" class="ma-input ma-textarea bbcode-target" required placeholder="Write your post…"></textarea>
+        </div>
+
+        <!-- Poll section -->
+        <div class="ma-card" style="margin-bottom:16px;">
+          <div class="ma-card-header" style="cursor:pointer;" onclick="togglePoll()">
+            <i class="bi bi-bar-chart-fill" style="color:var(--accent);"></i> Add a Poll (optional)
+            <i class="bi bi-chevron-down" id="poll-chevron" style="margin-left:auto;"></i>
+          </div>
+          <div id="poll-section" style="display:none;padding:16px;">
+            <input type="hidden" name="has_poll" id="has_poll_input" value="">
+            <div class="ma-form-group">
+              <label class="ma-label">Poll Question</label>
+              <input type="text" name="poll_question" class="ma-input" placeholder="What do you think about…?" maxlength="500">
+            </div>
+            <div class="ma-form-group">
+              <label class="ma-label">Choices</label>
+              <div id="poll-choices">
+                <input type="text" name="poll_choices" class="ma-input" style="margin-bottom:6px;" placeholder="Choice 1">
+                <input type="text" name="poll_choices" class="ma-input" style="margin-bottom:6px;" placeholder="Choice 2">
+                <input type="text" name="poll_choices" class="ma-input" style="margin-bottom:6px;" placeholder="Choice 3 (optional)">
+              </div>
+              <button type="button" onclick="addChoice()" class="ma-btn ma-btn-ghost ma-btn-sm" style="margin-top:4px;">+ Add Choice</button>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim);cursor:pointer;">
+              <input type="checkbox" name="multi_vote" style="accent-color:var(--accent);">
+              Allow multiple votes per person
+            </label>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <a href="{{ url_for('groups.view', slug=group.slug) }}" class="ma-btn ma-btn-ghost">Cancel</a>
+          <button type="submit" class="ma-btn ma-btn-primary">Post Thread »</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function togglePoll(){
+  var s=document.getElementById('poll-section');
+  var c=document.getElementById('poll-chevron');
+  var h=document.getElementById('has_poll_input');
+  var open=s.style.display==='block';
+  s.style.display=open?'none':'block';
+  c.className=open?'bi bi-chevron-down':'bi bi-chevron-up';
+  h.value=open?'':'1';
+}
+function addChoice(){
+  var d=document.getElementById('poll-choices');
+  var i=document.createElement('input');
+  i.type='text';i.name='poll_choices';i.className='ma-input';
+  i.style.marginBottom='6px';i.placeholder='Choice '+(d.children.length+1);
+  d.appendChild(i);
+}
+</script>
+{% endblock %}
