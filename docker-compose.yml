@@ -15,6 +15,7 @@ services:
       - groups
     networks:
       - groups_net
+      - myarea_shared_net
 
   groups:
     build: .
@@ -45,6 +46,7 @@ services:
         condition: service_healthy
     networks:
       - groups_net
+      - myarea_shared_net
 
   db:
     image: postgres:16-alpine
@@ -67,6 +69,9 @@ services:
 networks:
   groups_net:
     driver: bridge
+  myarea_shared_net:
+    external: true
+    name: myarea_shared_net
 
 volumes:
   groups_db_data:

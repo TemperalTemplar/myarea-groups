@@ -118,6 +118,21 @@ def join(slug):
     db.session.add(GroupMember(group_id=group.id, user_id=current_user.id, role=role))
     db.session.commit()
 
+    try:
+        from app.notify import notify_one
+        gname = group.name
+        actor = current_user.display if hasattr(current_user, "display") else "Someone"
+        if role == MemberRole.PENDING:
+            notify_one(group.created_by, "group_join_request",
+                       "Join request", f'{actor} requested to join {gname}.',
+                       f"https://groups.wrds361.com/{slug}/members")
+        else:
+            notify_one(group.created_by, "group_join",
+                       "New member", f'{actor} joined {gname}.',
+                       f"https://groups.wrds361.com/{slug}")
+    except Exception:
+        pass
+
     if role == MemberRole.PENDING:
         flash("Join request sent — waiting for approval.", "info")
     else:
@@ -205,6 +220,18 @@ def new_thread(slug):
                     db.session.add(PollChoice(poll_id=poll.id, text=choice_text, position=i))
 
             db.session.commit()
+
+            try:
+                from app.notify import notify_group_members
+                kind = "poll" if (has_poll and poll_question) else "thread"
+                label = "New poll" if kind == "poll" else "New thread"
+                notify_group_members(group, "group_thread", label,
+                    f'"{title}" in {group.name}',
+                    f"https://groups.wrds361.com/{slug}/thread/{thread.id}",
+                    exclude_user_id=current_user.id)
+            except Exception:
+                pass
+
             return redirect(url_for("groups.thread", slug=slug, thread_id=thread.id))
 
     return render_template("groups/new_thread.html", group=group, member=member, error=error)
@@ -281,6 +308,15 @@ def reply(slug, thread_id):
     thread.last_post_at    = datetime.utcnow()
     thread.last_poster_id  = current_user.id
     db.session.commit()
+
+    try:
+        from app.notify import notify_thread_participants
+        notify_thread_participants(thread, "group_reply", "New reply",
+            f'New reply in "{thread.title}"',
+            f"https://groups.wrds361.com/{slug}/thread/{thread.id}",
+            exclude_user_id=current_user.id)
+    except Exception:
+        pass
 
     # Notify members who want immediate notifications
     members_to_notify = GroupMember.query.filter(
