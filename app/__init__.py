@@ -67,6 +67,7 @@ def create_app(config=None):
     from app.routes.groups import bp as groups_bp
     from app.routes.mod    import bp as mod_bp
     from app.routes.api    import bp as api_bp
+    from app.routes.silex  import silex_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp,   url_prefix="/auth")
@@ -74,6 +75,7 @@ def create_app(config=None):
     app.register_blueprint(groups_bp, url_prefix="/groups")
     app.register_blueprint(mod_bp,    url_prefix="/mod")
     app.register_blueprint(api_bp,    url_prefix="/api")
+    app.register_blueprint(silex_bp)
 
     @app.context_processor
     def inject_globals():
